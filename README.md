@@ -9,5 +9,4 @@
 ### Result
 ![Result](screenshots/result.png)
 
-### Mobile View
-![Mobile](screenshots/mobile.png)
+
