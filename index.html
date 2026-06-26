@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌙 Dream Journal Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0d1a;
+      color: #e0dff5;
+      min-height: 100vh;
+    }
+
+    /* ── stars background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, #fff 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 60%, #c8beff 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 15%, #fff 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 40%, #c8beff 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 70%, #fff 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 80%, #c8beff 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 90%, #fff 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 10%, #fff 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative; z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── header ── */
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 { font-size: 2.2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header h1 span { color: #a78bfa; }
+    header p { margin-top: 8px; color: #9d9abf; font-size: 1rem; }
+
+    /* ── card ── */
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(167,139,250,0.2);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #a78bfa;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── form elements ── */
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #9d9abf;
+      margin-bottom: 6px;
+    }
+
+    input[type="password"],
+    textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(167,139,250,0.25);
+      border-radius: 10px;
+      color: #e0dff5;
+      font-size: 0.95rem;
+      padding: 12px 14px;
+      outline: none;
+      resize: vertical;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input[type="password"]:focus,
+    textarea:focus {
+      border-color: #a78bfa;
+    }
+    textarea { min-height: 130px; line-height: 1.6; }
+
+    /* ── button ── */
+    button#analyzeBtn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 6px;
+    }
+    button#analyzeBtn:hover { opacity: 0.9; }
+    button#analyzeBtn:active { transform: scale(0.98); }
+    button#analyzeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── loader ── */
+    #loader {
+      display: none;
+      text-align: center;
+      padding: 32px;
+      color: #9d9abf;
+      font-size: 0.95rem;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(167,139,250,0.2);
+      border-top-color: #a78bfa;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── agent steps ── */
+    .agent-steps {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .step {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(167,139,250,0.15);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 0.82rem;
+      color: #9d9abf;
+      transition: all 0.4s;
+    }
+    .step.active {
+      border-color: #a78bfa;
+      color: #a78bfa;
+      background: rgba(167,139,250,0.12);
+    }
+    .step.done {
+      border-color: #4ade80;
+      color: #4ade80;
+      background: rgba(74,222,128,0.08);
+    }
+
+    /* ── results ── */
+    #results { display: none; }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 640px) {
+      .result-grid { grid-template-columns: 1fr; }
+    }
+
+    .result-card {
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid rgba(167,139,250,0.15);
+    }
+    .result-card .rc-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+    .result-card .rc-body {
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: #c5c3e0;
+      white-space: pre-line;
+    }
+
+    .emotion-card .rc-title { color: #f87171; }
+    .symbol-card  .rc-title { color: #fbbf24; }
+    .pattern-card .rc-title { color: #34d399; }
+
+    /* ── final report ── */
+    .report-card {
+      background: rgba(167,139,250,0.07);
+      border: 1px solid rgba(167,139,250,0.3);
+      border-radius: 16px;
+      padding: 28px;
+    }
+    .report-card h2 {
+      font-size: 1.1rem;
+      color: #a78bfa;
+      margin-bottom: 16px;
+    }
+    .report-body {
+      font-size: 0.97rem;
+      line-height: 1.85;
+      color: #d4d2f0;
+      white-space: pre-line;
+    }
+
+    /* ── error ── */
+    #error {
+      display: none;
+      background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: #f87171;
+      font-size: 0.9rem;
+      margin-top: 14px;
+    }
+
+    /* ── reset button ── */
+    #resetBtn {
+      display: none;
+      margin: 22px auto 0;
+      padding: 10px 28px;
+      background: transparent;
+      border: 1px solid rgba(167,139,250,0.35);
+      border-radius: 10px;
+      color: #a78bfa;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #resetBtn:hover { background: rgba(167,139,250,0.1); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🌙 Dream Journal <span>Analyzer</span></h1>
+    <p>Multi-Agent AI powered by LangGraph + Gemini 2.5 Flash</p>
+  </header>
+
+  <!-- Input Card -->
+  <div class="card" id="inputCard">
+    <h2>🔑 Setup</h2>
+
+    <label for="apiKey">Gemini API Key</label>
+    <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off" />
+
+    <div style="height:18px"></div>
+
+    <label for="dreamText">Your Dream</label>
+    <textarea id="dreamText" placeholder="Describe your dream in as much detail as you remember…"></textarea>
+
+    <div style="height:16px"></div>
+    <button id="analyzeBtn" onclick="analyze()">✨ Analyze My Dream</button>
+    <div id="error"></div>
+  </div>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="spinner"></div>
+    <p id="loaderMsg">Starting agents…</p>
+    <div class="agent-steps">
+      <div class="step" id="step1">😰 Emotion Detector</div>
+      <div class="step" id="step2">🔮 Symbol Decoder</div>
+      <div class="step" id="step3">🔁 Pattern Tracker</div>
+      <div class="step" id="step4">✍️ Insight Narrator</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="result-grid">
+      <div class="result-card emotion-card">
+        <div class="rc-title">😰 Emotion Analysis</div>
+        <div class="rc-body" id="emotionResult"></div>
+      </div>
+      <div class="result-card symbol-card">
+        <div class="rc-title">🔮 Symbol Decoder</div>
+        <div class="rc-body" id="symbolResult"></div>
+      </div>
+      <div class="result-card pattern-card">
+        <div class="rc-title">🔁 Pattern Tracker</div>
+        <div class="rc-body" id="patternResult"></div>
+      </div>
+    </div>
+
+    <div class="report-card">
+      <h2>✨ Your Personal Dream Insight</h2>
+      <div class="report-body" id="reportResult"></div>
+    </div>
+
+    <div style="text-align:center">
+      <button id="resetBtn" onclick="reset()">🔄 Analyze Another Dream</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const steps = ['step1','step2','step3','step4'];
+  const msgs  = [
+    'Emotion Detector is reading your dream…',
+    'Symbol Decoder is decoding archetypes…',
+    'Pattern Tracker is finding themes…',
+    'Insight Narrator is writing your report…',
+  ];
+
+  let stepTimer = null;
+
+  function startStepAnimation() {
+    let i = 0;
+    steps.forEach(s => document.getElementById(s).className = 'step');
+    document.getElementById(steps[0]).classList.add('active');
+    document.getElementById('loaderMsg').textContent = msgs[0];
+
+    stepTimer = setInterval(() => {
+      document.getElementById(steps[i]).classList.replace('active','done');
+      i++;
+      if (i < steps.length) {
+        document.getElementById(steps[i]).classList.add('active');
+        document.getElementById('loaderMsg').textContent = msgs[i];
+      } else {
+        clearInterval(stepTimer);
+      }
+    }, 2800);
+  }
+
+  function stopStepAnimation() {
+    clearInterval(stepTimer);
+    steps.forEach(s => {
+      const el = document.getElementById(s);
+      el.classList.remove('active');
+      el.classList.add('done');
+    });
+  }
+
+  async function analyze() {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const dream  = document.getElementById('dreamText').value.trim();
+    const errEl  = document.getElementById('error');
+
+    errEl.style.display = 'none';
+
+    if (!apiKey) { showError('Please enter your Gemini API key.'); return; }
+    if (!dream)  { showError('Please describe your dream first.'); return; }
+
+    // Show loader
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('loader').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    startStepAnimation();
+
+    try {
+      const res = await fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dream, api_key: apiKey }),
+      });
+      const data = await res.json();
+
+      stopStepAnimation();
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('analyzeBtn').disabled = false;
+
+      if (data.error) { showError(data.error); return; }
+
+      document.getElementById('emotionResult').textContent = data.emotion;
+      document.getElementById('symbolResult').textContent  = data.symbols;
+      document.getElementById('patternResult').textContent = data.patterns;
+      document.getElementById('reportResult').textContent  = data.report;
+
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('resetBtn').style.display = 'inline-block';
+      document.getElementById('inputCard').style.display = 'none';
+
+    } catch (e) {
+      stopStepAnimation();
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('analyzeBtn').disabled = false;
+      showError('Could not reach the server. Is app.py running?');
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+  }
+
+  function reset() {
+    document.getElementById('dreamText').value = '';
+    document.getElementById('error').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('resetBtn').style.display = 'none';
+    document.getElementById('inputCard').style.display = 'block';
+    steps.forEach(s => document.getElementById(s).className = 'step');
+  }
+</script>
+</body>
+</html>

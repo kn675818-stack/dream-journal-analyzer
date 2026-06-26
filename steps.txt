@@ -1,0 +1,39 @@
+
+python app.py 
+
+"I was running through a dark forest and something was chasing me. I couldn't see what it was but I could hear it getting closer. My legs felt heavy and I couldn't run fast enough. I woke up sweating."
+
+What it will return:
+
+Emotion: High anxiety, fear — suggests you're avoiding a real-life pressure
+Symbols: Forest = uncertainty, Heavy legs = feeling powerless, Darkness = fear of the unknown
+Pattern: Escape/avoidance theme — likely work stress or unresolved conflict
+Report: A warm paragraph telling you this dream reflects feeling overwhelmed, with a journaling prompt like "What in your life are you trying to avoid right now?"
+
+
+Dream 2 — Flying Dream
+
+"I was flying over my city, very high up. I felt completely free and happy. I could see everything below me — my house, my school, my friends. Then slowly I started falling but I wasn't scared."
+
+What it will return:
+
+Emotion: Joy, wonder, Medium intensity — suggests a desire for freedom
+Symbols: Flying = ambition/liberation, City = your social world, Falling calmly = acceptance of change
+Pattern: Transformation theme — likely a positive life transition happening
+Report: An encouraging reflection about embracing a new chapter in life
+
+
+
+
+
+
+cd /home/ubuntu
+
+# Image build karo
+docker build -t dream-analyzer .
+
+# Container run karo
+docker run -d -p 5000:5000 --name dream-app dream-analyzer
+
+# Check karo chal raha hai ya nahi
+docker ps
