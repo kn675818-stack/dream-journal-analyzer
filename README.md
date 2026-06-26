@@ -1,14 +1,3 @@
-## 📸 Screenshots
-
-### Home Page
-![Home](screenshots/home.png)
-
-### Dream Analysis
-![Analysis](screenshots/analysis.png)
-
-### Result
-![Result](screenshots/result.png)
-
 # 🌙 Dream Journal Analyzer
 
 An AI-powered web application that analyzes dream descriptions and generates meaningful interpretations using **Google Gemini AI** and **LangGraph**. Built with a Flask backend and a responsive web interface, the application demonstrates the integration of Large Language Models (LLMs) into a real-world AI application.
@@ -157,5 +146,17 @@ This project is licensed under the MIT License.
 
 ---
 
-⭐ If you found this project helpful, consider giving it a **Star** on GitHub!
+## 📸 Screenshots
+
+### Home Page
+![Home](screenshots/home.png)
+
+### Dream Analysis
+![Analysis](screenshots/analysis.png)
+
+### Result
+![Result](screenshots/result.png)
+
+
+
 
